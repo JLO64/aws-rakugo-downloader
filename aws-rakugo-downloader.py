@@ -46,7 +46,11 @@ def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
     print(f"Generating text file of all files in {bucket_name}")
     with open(os.path.expanduser(f'~/downloaded-videos/{bucket_name}.txt'), 'w') as f:
         for obj in bucket.objects.all():
-            f.write(f"{obj.key}\t{obj.size}\t{obj.last_modified}\t{obj.meta.data['ResponseMetadata']['HTTPHeaders']['x-amz-website-redirect-location']}\n")
+            object_url = f"https://{bucket_name}.s3.amazonaws.com/{obj.key}"
+            #in MB
+            object_size = str((obj.size/1000000).__round__(2)) + ' MB'
+            object_date = str(obj.last_modified).split(' ')[0]
+            f.write(f"{obj.key}\t{object_size}\t{object_date}\t{object_url}\n")
 
 def main(args):
     #print(read_txt_urls(args.txtfile))
