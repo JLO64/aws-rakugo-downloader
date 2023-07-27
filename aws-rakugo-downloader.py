@@ -36,9 +36,13 @@ def upload_folder_contents_to_AWS_S3(bucket_name, folder_path, bucket=None):
     for subdir, dirs, files in os.walk(folder_path):
         for file in files:
             full_path = os.path.join(subdir, file)
+            object_key = full_path[len(folder_path)+1:]
+            if bucket.objects.filter(Prefix=object_key).count() > 0:
+                print(f"Object with key {object_key} already exists in bucket {bucket_name}. Skipping upload.")
+                continue
             print(f"Uploading {full_path}")
             with open(full_path, 'rb') as data:
-                bucket.put_object(Key=full_path[len(folder_path)+1:], Body=data)
+                bucket.put_object(Key=object_key, Body=data)
 
 def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
     #generate a text file of all the files in an S3 bucket
