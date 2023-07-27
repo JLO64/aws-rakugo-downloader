@@ -30,20 +30,31 @@ def download_videos(list_of_urls):
             if str(e).find('Programme') != -1:
                 print("Programme is likely no longer available.") 
 
-def upload_folder_contents_to_AWS_S3(bucket_name, folder_path):
+def upload_folder_contents_to_AWS_S3(bucket_name, folder_path, bucket=None):
     #upload the contents of a folder to an AWS S3 bucket
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucket_name)
+    print(f"Uploading contents of {folder_path} to {bucket_name}")
     for subdir, dirs, files in os.walk(folder_path):
         for file in files:
             full_path = os.path.join(subdir, file)
+            print(f"Uploading {full_path}")
             with open(full_path, 'rb') as data:
                 bucket.put_object(Key=full_path[len(folder_path)+1:], Body=data)
 
+def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
+    #generate a text file of all the files in an S3 bucket
+    #include their name, path, size, last modified date, and link
+    print(f"Generating text file of all files in {bucket_name}")
+    with open(os.path.expanduser(f'~/downloaded-videos/{bucket_name}.txt'), 'w') as f:
+        for obj in bucket.objects.all():
+            f.write(f"{obj.key}\t{obj.size}\t{obj.last_modified}\t{obj.meta.data['ResponseMetadata']['HTTPHeaders']['x-amz-website-redirect-location']}\n")
+
 def main(args):
-    print(read_txt_urls(args.txtfile))
+    #print(read_txt_urls(args.txtfile))
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(args.s3bucket)
     download_videos(read_txt_urls(args.txtfile))
-    upload_folder_contents_to_AWS_S3(args.s3bucket, os.path.expanduser('~/downloaded-videos'))
+    upload_folder_contents_to_AWS_S3(args.s3bucket, os.path.expanduser('~/downloaded-videos'), bucket=bucket)
+    generate_txt_file_of_all_files_in_s3_bucket(args.s3bucket, bucket=bucket)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download videos from URLs in a text file')
