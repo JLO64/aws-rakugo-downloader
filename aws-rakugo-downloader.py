@@ -37,7 +37,8 @@ def upload_folder_contents_to_AWS_S3(bucket_name, folder_path, bucket=None):
         for file in files:
             full_path = os.path.join(subdir, file)
             object_key = full_path[len(folder_path)+1:]
-            if bucket.objects.filter(Prefix=object_key).count() > 0:
+            # check if object already exists in bucket
+            if any(obj.key == object_key for obj in bucket.objects.all()):
                 print(f"Object with key {object_key} already exists in bucket {bucket_name}. Skipping upload.")
                 continue
             print(f"Uploading {full_path}")
@@ -49,12 +50,13 @@ def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
     #include their name, path, size, last modified date, and link
     print(f"Generating text file of all files in {bucket_name}")
     with open(os.path.expanduser(f'~/downloaded-videos/{bucket_name}.txt'), 'w') as f:
+        f.write(f"# {bucket_name}\n")
         for obj in bucket.objects.all():
             object_url = f"https://{bucket_name}.s3.amazonaws.com/{obj.key}"
             #in MB
             object_size = str((obj.size/1000000).__round__(2)) + ' MB'
             object_date = str(obj.last_modified).split(' ')[0]
-            f.write(f"{obj.key}\t{object_size}\t{object_date}\t{object_url}\n")
+            f.write(f"\n## {obj.key}\n- {object_size}\n -{object_date}\n- URL:{object_url}\n")
 
 def main(args):
     #print(read_txt_urls(args.txtfile))
