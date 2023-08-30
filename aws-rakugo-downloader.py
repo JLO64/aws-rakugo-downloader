@@ -2,6 +2,9 @@ import os
 from yt_dlp import YoutubeDL
 import argparse
 import boto3
+from datetime import datetime
+
+now = datetime.now() # current date and time
 
 boto3.setup_default_session(profile_name='default')
 
@@ -19,8 +22,9 @@ def download_videos(list_of_urls):
         print(website_name)
         if not os.path.exists(os.path.expanduser(f'~/downloaded-videos/{website_name}')):
             os.makedirs(os.path.expanduser(f'~/downloaded-videos/{website_name}'))
+        date_time = now.strftime("%Y%m%d")
         ydl_opts = {
-            'outtmpl': f'~/downloaded-videos/{website_name}/%(title)s.%(ext)s'
+            'outtmpl': f'~/downloaded-videos/{website_name}/%(title)s' + date_time + '.%(ext)s'
         }
         try:
             with YoutubeDL(ydl_opts) as ydl:
