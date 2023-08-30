@@ -2,11 +2,16 @@ import os
 from yt_dlp import YoutubeDL
 import argparse
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
-now = datetime.now() # current date and time
+# current date and time in tokyo timezone
+timezone_offset = 9 # JST
+tzinfo = timezone(timedelta(hours=timezone_offset))
+now = datetime.now(tzinfo)
 
 boto3.setup_default_session(profile_name='default')
+
+txt_log_filepath = os.path.expanduser(f'~/rajiko-dl-log-{now.strftime("%Y%m%d-%H%M%S")}.txt')
 
 def read_txt_urls(file_name):
     #return a list of urls from each line of a text filec in the home directory
@@ -33,6 +38,9 @@ def download_videos(list_of_urls):
             print(f"Error downloading {url}")
             if str(e).find('Programme') != -1:
                 print("Programme is likely no longer available.") 
+                write_str_to_txt_file(txt_log_filepath, f"Error downloading {url}, programme is likely no longer available.")
+            else:
+                write_str_to_txt_file(txt_log_filepath, f"Error downloading {url}")
 
 def upload_folder_contents_to_AWS_S3(bucket_name, folder_path, bucket=None):
     #upload the contents of a folder to an AWS S3 bucket
@@ -62,17 +70,27 @@ def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
             object_date = str(obj.last_modified).split(' ')[0]
             f.write(f"\n## {obj.key}\n- {object_size}\n -{object_date}\n- URL:{object_url}\n")
 
+def write_str_to_txt_file(filepath, string):
+    #write a string to a text file
+    #have the filename include the current date and time
+    with open(os.path.expanduser(filepath), 'w') as f:
+        f.write(string)
+
 def main(args):
-    #print(read_txt_urls(args.txtfile))
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(args.s3bucket)
+    txt_log_filepath = args.logfilepath
+    write_str_to_txt_file(txt_log_filepath, "Downloads initiated at: " + now.strftime("%H:%M:%S"))
     download_videos(read_txt_urls(args.txtfile))
+    write_str_to_txt_file(txt_log_filepath, "Finished downloading videos at: " + now.strftime("%H:%M:%S"))
     upload_folder_contents_to_AWS_S3(args.s3bucket, os.path.expanduser('~/downloaded-videos'), bucket=bucket)
+    write_str_to_txt_file(txt_log_filepath, "Finished uploading files to S3 at: " + now.strftime("%H:%M:%S"))
     generate_txt_file_of_all_files_in_s3_bucket(args.s3bucket, bucket=bucket)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download videos from URLs in a text file')
     parser.add_argument('--txtfile', metavar='txtfile', type=str, help='path to the text file containing URLs')
     parser.add_argument('--s3bucket', metavar='s3bucket', type=str, help='name of the S3 bucket to upload to')
+    parser.add_argument('--logfilepath', metavar='logfilepath', type=str, help='path to the log file')
     args = parser.parse_args()
     main(args)
