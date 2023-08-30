@@ -71,10 +71,11 @@ def generate_txt_file_of_all_files_in_s3_bucket(bucket_name, bucket=None):
             f.write(f"\n## {obj.key}\n- {object_size}\n -{object_date}\n- URL:{object_url}\n")
 
 def write_str_to_txt_file(filepath, string):
-    #write a string to a text file
+    #append a string to a text file, do not delete existing contents
     #have the filename include the current date and time
-    with open(os.path.expanduser(filepath), 'w') as f:
-        f.write(string)
+    with open(os.path.expanduser(filepath), 'a') as f:
+        f.write(string + '\n')
+        
 
 def main(args):
     s3 = boto3.resource('s3')
