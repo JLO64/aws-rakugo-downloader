@@ -80,6 +80,7 @@ def write_str_to_txt_file(filepath, string):
 def main(args):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(args.s3bucket)
+    global txt_log_filepath
     txt_log_filepath = args.logfilepath
     write_str_to_txt_file(txt_log_filepath, "Downloads initiated at: " + now.strftime("%H:%M:%S"))
     download_videos(read_txt_urls(args.txtfile))
