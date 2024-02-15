@@ -4,13 +4,15 @@ FROM ubuntu:22.04
 WORKDIR /app
 RUN apt-get update -y
 RUN apt-get install -y python3-pip python3-dev
-# Copies the files to the working directory
+
 COPY templates/ /app/templates/
-# Copies the dependency files to the working directory
 COPY requirements.txt /app/requirements.txt
+COPY *.py /app/
+
 # Install dependencies
 RUN pip install -r requirements.txt
-# Copies everything to the working directory
-COPY . /app
+
+# COPY . /app
+RUN mkdir ./yt-dlp-downloads
 # Command to run on container start    
 CMD [ "python3" , "./flask-app.py" ]

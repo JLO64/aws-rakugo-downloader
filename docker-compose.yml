@@ -1,0 +1,11 @@
+version: "3"
+services:
+  yt-dlp-downloader-web-ui:
+    container_name: yt-dlp-downloader-web-ui
+    image: yt-dlp-downloader-web-ui:v1
+    volumes:
+      - '/home/siblings/yt-dlp/downloads:/app/yt-dlp-downloads'
+      - '/home/siblings/yt-dlp/logs:/app/logs'
+    ports:
+      - "5000:5000"
+    restart: 'unless-stopped'
