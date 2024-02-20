@@ -1,4 +1,5 @@
 flask
-yt_dlp
+yt-dlp
 pytz
+https://github.com/garret1317/yt-dlp-rajiko/archive/master.zip
 waitress

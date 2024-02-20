@@ -27,6 +27,7 @@ def download_videos(list_of_urls):
         if not os.path.exists(f'./yt-dlp-downloads/{website_name}'):
             os.makedirs(f'./yt-dlp-downloads/{website_name}')
         ydl_opts = {
+            'n_threads': 4,
             'outtmpl': f'./yt-dlp-downloads/{website_name}/%(title)s' + datetime.now(pytz.timezone(selectedTimezone)).strftime("%Y%m%d") + '.%(ext)s'
         }
         try:
@@ -67,7 +68,7 @@ def main(txtfile, logfilepath, selectedtz):
     global selectedTimezone
     selectedTimezone = args.selectedtz
     txt_log_filepath = args.logfilepath
-    write_str_to_txt_file(txt_log_filepath, "Downloads initiated")
+    write_str_to_txt_file(txt_log_filepath, "Downloads initiated at: " + datetime.now(pytz.timezone(selectedTimezone)).strftime("%Y-%m-%d"))
     download_videos(read_txt_urls(args.txtfile))
     write_str_to_txt_file(txt_log_filepath, "Finished downloading videos")
 
